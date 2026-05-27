@@ -144,6 +144,9 @@ const styles = {
       .timeline-year { width: auto !important; text-align: left !important; }
       .timeline-dot { display: none; }
       .timeline-line { display: none; }
+      
+      .admin-grid { grid-template-columns: 1fr !important; }
+      .admin-panel-container { padding: 24px !important; }
     }
   `
 };
@@ -393,9 +396,24 @@ function Hero({ setPage, config }) {
           </button>
         </div>
 
+        {/* Owner image on mobile */}
+        {config?.ownerUrl && (
+          <div className="mobile-only" style={{
+            marginTop: '48px', width: '100%', height: '300px', overflow: 'hidden',
+            borderRadius: '4px', border: `1px solid rgba(201,168,76,0.15)`,
+            animation: 'fadeIn 1.2s 0.3s ease both',
+          }}>
+            <img
+              src={config.ownerUrl}
+              alt="Tushar"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+            />
+          </div>
+        )}
+
         {/* Stats row */}
         <div className="hero-stats" style={{
-          display: 'flex', gap: '52px', marginTop: '80px',
+          display: 'flex', gap: '52px', marginTop: '60px',
           borderTop: `1px solid rgba(201,168,76,0.15)`,
           paddingTop: '36px',
           animation: 'fadeUp 0.8s 0.8s ease both',
@@ -580,6 +598,7 @@ function WorkCard({ work }) {
         {work.type === 'video' ? (
           <video
             src={work.url}
+            poster={work.thumbnailUrl}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             controls={hovered}
             muted
@@ -1134,7 +1153,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
   const [newWork, setNewWork] = useState({
     title: '', client: '', category: 'Social Media',
     type: 'image', url: '', description: '',
-    shootType: '', location: '', instaId: '',
+    shootType: '', location: '', instaId: '', thumbnailUrl: '',
   });
   const [msg, setMsg] = useState('');
   const fileRef = useRef();
@@ -1200,6 +1219,32 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
     setTimeout(() => setMsg(''), 3000);
   };
 
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setMsg('Security Error: Invalid file type for thumbnail.');
+      return;
+    }
+
+    setMsg('Uploading thumbnail...');
+    const fileExt = file.name.split('.').pop();
+    const fileName = `thumb_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { error } = await supabase.storage.from('media').upload(fileName, file);
+    if (error) {
+      setMsg(`Upload failed: ${error.message}`);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(fileName);
+    setNewWork(p => ({ ...p, thumbnailUrl: publicUrl }));
+    setMsg('Thumbnail uploaded successfully!');
+    setTimeout(() => setMsg(''), 3000);
+  };
+
   const handleConfigImageUpload = async (e, field) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1228,8 +1273,8 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
   const addWork = async () => {
     if (!newWork.title) { setMsg('Title is required'); return; }
     setMsg('Adding work...');
-    const { id, shootType, instaId, ...workData } = newWork;
-    const insertData = { ...workData, shoottype: shootType, instaid: instaId };
+    const { id, shootType, instaId, thumbnailUrl, ...workData } = newWork;
+    const insertData = { ...workData, shoottype: shootType, instaid: instaId, thumbnailurl: thumbnailUrl };
 
     const { data, error } = await supabase.from('works').insert([insertData]).select();
 
@@ -1238,9 +1283,9 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       return;
     }
 
-    const savedWork = { ...data[0], shootType: data[0].shoottype, instaId: data[0].instaid };
+    const savedWork = { ...data[0], shootType: data[0].shoottype, instaId: data[0].instaid, thumbnailUrl: data[0].thumbnailurl };
     setWorks([savedWork, ...works]);
-    setNewWork({ title: '', client: '', category: 'Social Media', type: 'image', url: '', description: '', shootType: '', location: '', instaId: '' });
+    setNewWork({ title: '', client: '', category: 'Social Media', type: 'image', url: '', description: '', shootType: '', location: '', instaId: '', thumbnailUrl: '' });
     setMsg('✓ Work added successfully!');
     setTimeout(() => setMsg(''), 3000);
   };
@@ -1263,9 +1308,9 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       <div style={{
         height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BLACK,
       }}>
-        <div style={{
+        <div className="admin-panel-container" style={{
           background: CHARCOAL, border: `1px solid rgba(201,168,76,0.2)`,
-          borderRadius: '4px', padding: '60px 52px', width: '400px', textAlign: 'center',
+          borderRadius: '4px', padding: '60px 52px', maxWidth: '400px', width: '90%', textAlign: 'center',
         }}>
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -1313,9 +1358,9 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh', background: BLACK }}>
       {/* Header */}
-      <div style={{ background: DARK, borderBottom: `1px solid rgba(201,168,76,0.15)`, padding: '24px 60px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
+      <div className="admin-panel-container" style={{ background: DARK, borderBottom: `1px solid rgba(201,168,76,0.15)`, padding: '24px 60px' }}>
+        <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <div style={{ fontSize: '11px', letterSpacing: '0.2em', color: GOLD, textTransform: 'uppercase', marginBottom: '4px' }}>
               Admin Dashboard
             </div>
@@ -1323,7 +1368,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
               Tushar Socials
             </h1>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {['works', 'general', 'texts', 'lists'].map(t => (
               <button
                 key={t}
@@ -1354,12 +1399,12 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       </div>
 
       {activeTab === 'general' && (
-        <div style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
+        <div className="admin-panel-container" style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '32px', color: CREAM, marginBottom: '40px' }}>General Settings</h2>
 
           <div style={{ marginBottom: '40px' }}>
             <h3 style={{ color: GOLD, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>Branding & Images</h3>
-            <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
+            <div className="flex-row" style={{ gap: '24px', marginBottom: '16px' }}>
               <div style={{ flex: 1, padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.3)', textAlign: 'center', borderRadius: '4px' }}>
                 <p style={{ color: CREAM, fontSize: '13px', marginBottom: '12px' }}>Website Logo</p>
                 {editConfig.logoUrl && <img src={editConfig.logoUrl} alt="Logo" style={{ height: '40px', objectFit: 'contain', marginBottom: '16px' }} />}
@@ -1401,7 +1446,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       )}
 
       {activeTab === 'texts' && (
-        <div style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
+        <div className="admin-panel-container" style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '32px', color: CREAM, marginBottom: '40px' }}>Extra Texts</h2>
 
           <div style={{ marginBottom: '40px' }}>
@@ -1422,7 +1467,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       )}
 
       {activeTab === 'lists' && (
-        <div style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
+        <div className="admin-panel-container" style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '32px', color: CREAM, marginBottom: '20px' }}>Manage Lists (Advanced)</h2>
           <p style={{ color: 'rgba(232,228,220,0.5)', fontSize: '14px', marginBottom: '20px', lineHeight: 1.6 }}>Edit the JSON data below to directly manage your Services, Timeline milestones, and Hero Stats. Click "Save List Changes" when you're done.</p>
 
@@ -1445,9 +1490,9 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       )}
 
       {activeTab === 'works' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', minHeight: 'calc(100vh - 160px)' }}>
+        <div className="admin-grid" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', minHeight: 'calc(100vh - 160px)' }}>
           {/* Add form */}
-          <div style={{ padding: '40px', background: DARK, borderRight: `1px solid rgba(201,168,76,0.1)` }}>
+          <div className="admin-panel-container" style={{ padding: '40px', background: DARK, borderRight: `1px solid rgba(201,168,76,0.1)` }}>
             <h2 style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: '24px', color: CREAM, fontWeight: 300, marginBottom: '28px',
@@ -1541,6 +1586,37 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
               />
             </div>
 
+            {newWork.type === 'video' && (
+              <div style={{
+                border: `2px dashed rgba(201,168,76,0.25)`,
+                borderRadius: '4px', padding: '16px',
+                textAlign: 'center', marginBottom: '14px',
+                cursor: 'pointer', transition: 'border-color 0.3s',
+              }}
+                onClick={() => document.getElementById('thumbUpload').click()}
+                onMouseEnter={e => e.currentTarget.style.borderColor = GOLD}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(201,168,76,0.25)'}
+              >
+                {newWork.thumbnailUrl ? (
+                  <div>
+                    <img src={newWork.thumbnailUrl} alt="thumbnail" style={{ maxWidth: '100%', maxHeight: '120px', objectFit: 'cover', borderRadius: '2px' }} />
+                    <p style={{ fontSize: '12px', color: GOLD, marginTop: '8px' }}>Change Thumbnail</p>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '13px', color: 'rgba(232,228,220,0.4)' }}>
+                    Upload Video Thumbnail (Optional)
+                  </p>
+                )}
+                <input
+                  id="thumbUpload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleThumbnailUpload}
+                />
+              </div>
+            )}
+
             {/* Or URL */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
               <div style={{ flex: 1, height: '1px', background: 'rgba(201,168,76,0.1)' }} />
@@ -1586,8 +1662,8 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
           </div>
 
           {/* Works list */}
-          <div style={{ padding: '40px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+          <div className="admin-panel-container" style={{ padding: '40px', overflowY: 'auto' }}>
+            <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
               <h2 style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: '24px', color: CREAM, fontWeight: 300,
@@ -1614,7 +1690,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
                   }}>
                     <div style={{ aspectRatio: '4/3', background: DARK, position: 'relative' }}>
                       {w.type === 'video' ? (
-                        <video src={w.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                        <video src={w.url} poster={w.thumbnailUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
                       ) : w.url ? (
                         <img src={w.url} alt={w.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
@@ -1863,7 +1939,8 @@ export default function App() {
           const mappedWorks = worksData.map(w => ({
             ...w,
             shootType: w.shoottype,
-            instaId: w.instaid
+            instaId: w.instaid,
+            thumbnailUrl: w.thumbnailurl
           }));
           setWorks(mappedWorks);
         }
