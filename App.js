@@ -182,7 +182,7 @@ function Nav({ setPage, currentPage, config }) {
 
   return (
     <>
-      <nav style={navStyle} className={scrolled ? "section-padding" : "section-padding"} style={{ padding: scrolled ? '16px 48px' : '24px 48px', ...(scrolled ? navStyle : navStyle) }}>
+      <nav className="section-padding" style={{ padding: scrolled ? '16px 48px' : '24px 48px', ...navStyle }}>
         <div style={logoStyle} onClick={() => { setPage('home'); setMenuOpen(false); }}>
           {config?.logoUrl ? (
             <img src={config.logoUrl} alt="Tushar Socials Logo" style={{ height: '40px', objectFit: 'contain' }} />
