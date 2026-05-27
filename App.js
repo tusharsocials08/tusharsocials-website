@@ -1202,6 +1202,14 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       return;
     }
 
+    // File size validation (50MB)
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setMsg('Upload failed: File size exceeds the 50MB limit.');
+      return;
+    }
+
+
     setMsg('Uploading...');
     const type = file.type.startsWith('video') ? 'video' : 'image';
     const fileExt = file.name.split('.').pop();
@@ -1230,6 +1238,13 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       return;
     }
 
+    // File size validation (50MB)
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setMsg('Upload failed: File size exceeds the 50MB limit.');
+      return;
+    }
+
     setMsg('Uploading thumbnail...');
     const fileExt = file.name.split('.').pop();
     const fileName = `thumb_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -1254,6 +1269,13 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       setMsg('Security Error: Invalid file type.');
+      return;
+    }
+
+    // File size validation (50MB)
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setMsg('Upload failed: File size exceeds the 50MB limit.');
       return;
     }
 
@@ -1576,7 +1598,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
                     Click to upload image or video
                   </p>
                   <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.25)', marginTop: '4px' }}>
-                    JPG, PNG, MP4, MOV supported
+                    JPG, PNG, MP4, MOV supported (Max 50MB)
                   </p>
                 </>
               )}
