@@ -1053,9 +1053,13 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 
   const saveSettings = async () => {
     setMsg('Saving...');
-    await setConfig(editConfig);
-    setMsg('✓ Settings saved successfully!');
-    setTimeout(() => setMsg(''), 3000);
+    const { error } = await setConfig(editConfig);
+    if (error) {
+      setMsg(`Error saving: ${error.message}`);
+    } else {
+      setMsg('✓ Settings saved successfully!');
+      setTimeout(() => setMsg(''), 3000);
+    }
   };
 
   const handleLogin = async () => {
@@ -1775,7 +1779,8 @@ export default function App() {
 
   const saveConfig = async (newConfig) => {
     setConfig(newConfig);
-    await supabase.from('config').upsert({ id: 1, data: newConfig });
+    const { error } = await supabase.from('config').upsert({ id: 1, data: newConfig });
+    return { error };
   };
 
   // Scroll to top on page change
