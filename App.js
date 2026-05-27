@@ -1196,7 +1196,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
     if (!file) return;
 
     // Security Fix: Restrict file types
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime'];
     if (!validTypes.includes(file.type)) {
       setMsg('Security Error: Invalid file type.');
       return;
