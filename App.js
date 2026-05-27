@@ -1209,7 +1209,8 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 
     const { data, error } = await supabase.storage.from('media').upload(fileName, file);
     if (error) {
-      setMsg(`Upload failed: ${error.message}`);
+      console.error("Supabase Upload Error:", error);
+      setMsg(`Upload failed: ${error.message} (Check console/adblocker/bucket existence)`);
       return;
     }
 
@@ -1235,7 +1236,8 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 
     const { error } = await supabase.storage.from('media').upload(fileName, file);
     if (error) {
-      setMsg(`Upload failed: ${error.message}`);
+      console.error("Supabase Thumbnail Upload Error:", error);
+      setMsg(`Upload failed: ${error.message} (Check console/adblocker/bucket existence)`);
       return;
     }
 
@@ -1261,7 +1263,8 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 
     const { error } = await supabase.storage.from('media').upload(fileName, file);
     if (error) {
-      setMsg(`Upload failed: ${error.message}`);
+      console.error("Supabase Config Upload Error:", error);
+      setMsg(`Upload failed: ${error.message} (Check console/adblocker/bucket existence)`);
       return;
     }
 
