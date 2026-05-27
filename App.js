@@ -316,27 +316,29 @@ function Hero({ setPage, config }) {
       </div>
 
       {/* Owner image on right */}
-      <div style={{
-        position: 'absolute', right: 0, top: 0, bottom: 0,
-        width: '40%', overflow: 'hidden',
-        animation: 'fadeIn 1.2s 0.3s ease both',
-      }}>
+      {config?.ownerUrl && (
         <div style={{
-          position: 'absolute', inset: 0,
-          background: `linear-gradient(to right, ${BLACK} 0%, transparent 40%)`,
-          zIndex: 1,
-        }} />
-        <img
-          src={OwnerImg}
-          alt="Tushar"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-        />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `linear-gradient(to top, ${BLACK} 0%, transparent 40%)`,
-          zIndex: 1,
-        }} />
-      </div>
+          position: 'absolute', right: 0, top: 0, bottom: 0,
+          width: '40%', overflow: 'hidden',
+          animation: 'fadeIn 1.2s 0.3s ease both',
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(to right, ${BLACK} 0%, transparent 40%)`,
+            zIndex: 1,
+          }} />
+          <img
+            src={config.ownerUrl}
+            alt="Tushar"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(to top, ${BLACK} 0%, transparent 40%)`,
+            zIndex: 1,
+          }} />
+        </div>
+      )}
     </section>
   );
 }
