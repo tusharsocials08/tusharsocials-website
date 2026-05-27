@@ -933,8 +933,16 @@ function ContactPage({ config }) {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.message) return;
+    
+    // Size limit validations to prevent API rejection
+    if (formData.name.length > 100 || formData.email.length > 100 || formData.message.length > 2000) {
+      setErrorMsg('Error: Input text exceeds maximum allowed length.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
+
     
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
@@ -1297,6 +1305,13 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 
   const addWork = async () => {
     if (!newWork.title) { setMsg('Title is required'); return; }
+
+    // Text length limits to prevent DB errors
+    if (newWork.title.length > 200 || (newWork.description && newWork.description.length > 1500)) {
+      setMsg('Error: Title or Description exceeds maximum length.');
+      return;
+    }
+
     setMsg('Adding work...');
     const { id, shootType, instaId, thumbnailUrl, ...workData } = newWork;
     const insertData = { ...workData, shoottype: shootType, instaid: instaId, thumbnailurl: thumbnailUrl };
@@ -1316,7 +1331,11 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
   };
 
   const removeWork = async (id) => {
-    await supabase.from('works').delete().eq('id', id);
+    const { error } = await supabase.from('works').delete().eq('id', id);
+    if (error) {
+      setMsg(`Error deleting work: ${error.message}`);
+      return;
+    }
     setWorks(works.filter(w => w.id !== id));
   };
 
