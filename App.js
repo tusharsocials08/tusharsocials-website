@@ -81,6 +81,70 @@ const styles = {
     }
     .fade-up { animation: fadeUp 0.8s ease forwards; }
     .fade-in { animation: fadeIn 1s ease forwards; }
+
+    /* Responsive Utilities */
+    .section-padding { padding: 120px 80px; }
+    .hero-padding { padding: 0 80px; margin-top: 100px; }
+    .about-padding { padding: 80px; }
+    .contact-padding { padding: 80px; }
+    
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .grid-works { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+    .flex-row { display: flex; flex-direction: row; }
+    
+    .text-huge { font-size: clamp(56px, 8vw, 110px); }
+    .text-h1 { font-size: clamp(48px, 6vw, 80px); }
+    .text-h2 { font-size: clamp(40px, 5vw, 64px); }
+    
+    .desktop-only { display: block; }
+    .mobile-only { display: none; }
+    
+    .nav-links { display: flex; gap: 36px; align-items: center; }
+    
+    /* Mobile overlay menu */
+    .mobile-menu-overlay {
+      position: fixed; inset: 0; background: rgba(10,10,10,0.98);
+      z-index: 99; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 32px;
+      opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+    }
+    .mobile-menu-overlay.open { opacity: 1; pointer-events: auto; }
+
+    @media (max-width: 1024px) {
+      .section-padding { padding: 80px 40px; }
+      .hero-padding { padding: 0 40px; margin-top: 120px; }
+      .about-padding { padding: 60px 40px; }
+      .contact-padding { padding: 60px 40px; }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .section-padding { padding: 60px 24px; }
+      .hero-padding { padding: 0 24px; margin-top: 100px; }
+      .about-padding { padding: 40px 24px; }
+      .contact-padding { padding: 40px 24px; }
+      
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-works { grid-template-columns: 1fr; }
+      .flex-row { flex-direction: column; }
+      
+      .desktop-only { display: none !important; }
+      .mobile-only { display: block; }
+      
+      .nav-links { display: none; }
+      
+      /* specific layout tweaks for mobile */
+      .hero-stats { flex-direction: column; gap: 24px !important; margin-top: 40px !important; }
+      .contact-grid { grid-template-columns: 1fr !important; }
+      .footer-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+      .about-vision-grid { grid-template-columns: 1fr !important; }
+      .timeline-flex { flex-direction: column; gap: 16px !important; }
+      .timeline-year { width: auto !important; text-align: left !important; }
+      .timeline-dot { display: none; }
+      .timeline-line { display: none; }
+    }
   `
 };
 
@@ -99,7 +163,6 @@ function Nav({ setPage, currentPage, config }) {
 
   const navStyle = {
     position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-    padding: '20px 48px',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     background: scrolled ? 'rgba(10,10,10,0.95)' : 'transparent',
     backdropFilter: scrolled ? 'blur(12px)' : 'none',
@@ -111,52 +174,91 @@ function Nav({ setPage, currentPage, config }) {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
+    zIndex: 101, // Keep above overlay
   };
 
   return (
-    <nav style={navStyle}>
-      <div style={logoStyle} onClick={() => { setPage('home'); setMenuOpen(false); }}>
-        {config?.logoUrl ? (
-          <img src={config.logoUrl} alt="Tushar Socials Logo" style={{ height: '40px', objectFit: 'contain' }} />
-        ) : (
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '24px', color: GOLD }}>Tushar Socials</div>
-        )}
-      </div>
+    <>
+      <nav style={navStyle} className={scrolled ? "section-padding" : "section-padding"} style={{ padding: scrolled ? '16px 48px' : '24px 48px', ...(scrolled ? navStyle : navStyle) }}>
+        <div style={logoStyle} onClick={() => { setPage('home'); setMenuOpen(false); }}>
+          {config?.logoUrl ? (
+            <img src={config.logoUrl} alt="Tushar Socials Logo" style={{ height: '40px', objectFit: 'contain' }} />
+          ) : (
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '24px', color: GOLD }}>Tushar Socials</div>
+          )}
+        </div>
 
-      {/* Desktop links */}
-      <div style={{ display: 'flex', gap: '36px', alignItems: 'center' }}>
+        {/* Desktop links */}
+        <div className="nav-links desktop-only">
+          {links.map(l => (
+            <button
+              key={l}
+              onClick={() => setPage(l.toLowerCase())}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '13px', letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: currentPage === l.toLowerCase() ? GOLD : 'rgba(232,228,220,0.7)',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 400,
+                transition: 'color 0.3s',
+                borderBottom: currentPage === l.toLowerCase() ? `1px solid ${GOLD}` : '1px solid transparent',
+                paddingBottom: '2px',
+              }}
+            >{l}</button>
+          ))}
+          <button
+            onClick={() => setPage('admin')}
+            style={{
+              background: 'transparent', border: `1px solid ${GOLD}`,
+              color: GOLD, padding: '8px 20px', borderRadius: '2px',
+              fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase',
+              fontFamily: "'DM Sans', sans-serif", cursor: 'pointer',
+              transition: 'all 0.3s',
+            }}
+            onMouseEnter={e => { e.target.style.background = GOLD; e.target.style.color = BLACK; }}
+            onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = GOLD; }}
+          >
+            Admin
+          </button>
+        </div>
+        
+        {/* Mobile menu toggle */}
+        <button 
+          className="mobile-only"
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{ background: 'none', border: 'none', color: GOLD, fontSize: '24px', cursor: 'pointer', zIndex: 101 }}
+        >
+          {menuOpen ? '✕' : '☰'}
+        </button>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`mobile-menu-overlay ${menuOpen ? 'open' : ''}`}>
         {links.map(l => (
           <button
             key={l}
-            onClick={() => setPage(l.toLowerCase())}
+            onClick={() => { setPage(l.toLowerCase()); setMenuOpen(false); }}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: '13px', letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: currentPage === l.toLowerCase() ? GOLD : 'rgba(232,228,220,0.7)',
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 400,
-              transition: 'color 0.3s',
-              borderBottom: currentPage === l.toLowerCase() ? `1px solid ${GOLD}` : '1px solid transparent',
-              paddingBottom: '2px',
+              fontSize: '24px', letterSpacing: '0.15em', textTransform: 'uppercase',
+              color: currentPage === l.toLowerCase() ? GOLD : CREAM,
+              fontFamily: "'Cormorant Garamond', serif",
             }}
           >{l}</button>
         ))}
         <button
-          onClick={() => setPage('admin')}
+          onClick={() => { setPage('admin'); setMenuOpen(false); }}
           style={{
             background: 'transparent', border: `1px solid ${GOLD}`,
-            color: GOLD, padding: '8px 20px', borderRadius: '2px',
-            fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase',
-            fontFamily: "'DM Sans', sans-serif", cursor: 'pointer',
-            transition: 'all 0.3s',
+            color: GOLD, padding: '12px 32px', borderRadius: '2px',
+            fontSize: '13px', letterSpacing: '0.15em', textTransform: 'uppercase',
+            fontFamily: "'DM Sans', sans-serif", cursor: 'pointer', marginTop: '24px'
           }}
-          onMouseEnter={e => { e.target.style.background = GOLD; e.target.style.color = BLACK; }}
-          onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = GOLD; }}
         >
           Admin
         </button>
       </div>
-    </nav>
+    </>
   );
 }
 
@@ -218,7 +320,7 @@ function Hero({ setPage, config }) {
         opacity: 0.4,
       }} />
 
-      <div style={{ padding: '0 80px 0 80px', marginTop: '100px', position: 'relative', zIndex: 1, maxWidth: '900px' }}>
+      <div className="hero-padding" style={{ position: 'relative', zIndex: 1, maxWidth: '900px' }}>
         {/* Eyebrow */}
         <div style={{
           fontSize: '11px', letterSpacing: '0.25em', textTransform: 'uppercase',
@@ -231,9 +333,8 @@ function Hero({ setPage, config }) {
         </div>
 
         {/* Headline */}
-        <h1 style={{
+        <h1 className="text-huge" style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontSize: 'clamp(56px, 8vw, 110px)',
           fontWeight: 300,
           lineHeight: 0.9,
           letterSpacing: '-0.02em',
@@ -293,7 +394,7 @@ function Hero({ setPage, config }) {
         </div>
 
         {/* Stats row */}
-        <div style={{
+        <div className="hero-stats" style={{
           display: 'flex', gap: '52px', marginTop: '80px',
           borderTop: `1px solid rgba(201,168,76,0.15)`,
           paddingTop: '36px',
@@ -317,7 +418,7 @@ function Hero({ setPage, config }) {
 
       {/* Owner image on right */}
       {config?.ownerUrl && (
-        <div style={{
+        <div className="desktop-only" style={{
           position: 'absolute', right: 0, top: 0, bottom: 0,
           width: '40%', overflow: 'hidden',
           animation: 'fadeIn 1.2s 0.3s ease both',
@@ -346,7 +447,7 @@ function Hero({ setPage, config }) {
 /* ── SERVICES PREVIEW ── */
 function ServicesPreview({ setPage, config }) {
   return (
-    <section style={{ padding: '120px 80px', background: DARK }}>
+    <section className="section-padding" style={{ background: DARK }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '72px' }}>
           <div>
@@ -378,7 +479,7 @@ function ServicesPreview({ setPage, config }) {
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'rgba(201,168,76,0.1)' }}>
+        <div className="grid-3" style={{ gap: '1px', background: 'rgba(201,168,76,0.1)' }}>
           {config.services.map((s, i) => (
             <div
               key={i}
@@ -417,7 +518,7 @@ function WorkSection({ works }) {
   const hasWorks = works && works.length > 0;
 
   return (
-    <section style={{ padding: '120px 80px', background: BLACK }}>
+    <section className="section-padding" style={{ background: BLACK }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '72px' }}>
           <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '16px' }}>
@@ -448,7 +549,7 @@ function WorkSection({ works }) {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+          <div className="grid-works" style={{ gap: '24px' }}>
             {works.map((w, i) => (
               <WorkCard key={i} work={w} />
             ))}
@@ -544,7 +645,7 @@ function AboutPage({ config }) {
   return (
     <div style={{ paddingTop: '100px', minHeight: '100vh', background: BLACK }}>
       {/* Hero */}
-      <section style={{ padding: '80px 80px 120px', position: 'relative', overflow: 'hidden' }}>
+      <section className="about-padding" style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', top: 0, right: 0,
           width: '50%', height: '100%',
@@ -570,9 +671,8 @@ function AboutPage({ config }) {
           <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '24px' }}>
             The Story
           </div>
-          <h1 style={{
+          <h1 className="text-h1" style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 'clamp(48px, 6vw, 80px)',
             fontWeight: 300, color: CREAM, lineHeight: 0.95,
             marginBottom: '32px',
           }}>
@@ -586,25 +686,25 @@ function AboutPage({ config }) {
       </section>
 
       {/* Timeline */}
-      <section style={{ padding: '80px', background: DARK }}>
+      <section className="about-padding" style={{ background: DARK }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '48px' }}>
             Our Journey
           </div>
           <div style={{ position: 'relative' }}>
-            <div style={{
+            <div className="timeline-line" style={{
               position: 'absolute', left: '80px', top: 0, bottom: 0,
               width: '1px', background: `linear-gradient(to bottom, ${GOLD}, rgba(201,168,76,0.1))`,
             }} />
             {config.timeline.map((t, i) => (
-              <div key={i} style={{ display: 'flex', gap: '40px', marginBottom: '52px', position: 'relative' }}>
-                <div style={{ width: '80px', flexShrink: 0, textAlign: 'right' }}>
+              <div key={i} className="timeline-flex" style={{ display: 'flex', gap: '40px', marginBottom: '52px', position: 'relative' }}>
+                <div className="timeline-year" style={{ width: '80px', flexShrink: 0, textAlign: 'right' }}>
                   <div style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: '18px', color: GOLD, fontWeight: 300,
                   }}>{t.year}</div>
                 </div>
-                <div style={{
+                <div className="timeline-dot" style={{
                   width: '10px', height: '10px', borderRadius: '50%',
                   background: GOLD, flexShrink: 0, marginTop: '6px',
                   boxShadow: `0 0 12px rgba(201,168,76,0.4)`,
@@ -625,14 +725,14 @@ function AboutPage({ config }) {
       </section>
 
       {/* Vision */}
-      <section style={{ padding: '80px', background: BLACK }}>
+      <section className="about-padding" style={{ background: BLACK }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '32px' }}>
             Future Vision
           </div>
-          <h2 style={{
+          <h2 className="text-h1" style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: '48px', fontWeight: 300, color: CREAM, lineHeight: 1.1,
+            fontWeight: 300, color: CREAM, lineHeight: 1.1,
             marginBottom: '32px',
             whiteSpace: 'pre-line'
           }}>
@@ -642,9 +742,9 @@ function AboutPage({ config }) {
             {config.aboutVisionSub}
           </p>
 
-          <div style={{
+          <div className="grid-3 about-vision-grid" style={{
             marginTop: '52px',
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px',
+            gap: '24px',
           }}>
             {['Cafés & Restaurants', 'Salons & Beauty', 'Interior Designers', 'Local Businesses', 'Fashion & Clothing', 'Influencers'].map(ind => (
               <div key={ind} style={{
@@ -670,13 +770,12 @@ function AboutPage({ config }) {
 function ServicesPage({ config }) {
   return (
     <div style={{ paddingTop: '100px', minHeight: '100vh', background: BLACK }}>
-      <section style={{ padding: '80px 80px 40px' }}>
+      <section className="about-padding">
         <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '24px' }}>
           What We Offer
         </div>
-        <h1 style={{
+        <h1 className="text-h1" style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontSize: 'clamp(48px, 6vw, 80px)',
           fontWeight: 300, color: CREAM, lineHeight: 0.95, marginBottom: '24px',
         }}>
           Our <em style={{ color: GOLD }}>Services</em>
@@ -687,8 +786,8 @@ function ServicesPage({ config }) {
         </p>
       </section>
 
-      <section style={{ padding: '40px 80px 120px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', maxWidth: '1100px' }}>
+      <section className="about-padding" style={{ paddingTop: '40px' }}>
+        <div className="grid-2" style={{ gap: '24px', maxWidth: '1100px', margin: '0 auto' }}>
           {config.services.map((s, i) => (
             <div
               key={i}
@@ -745,13 +844,12 @@ function WorkPage({ works }) {
 
   return (
     <div style={{ paddingTop: '100px', minHeight: '100vh', background: BLACK }}>
-      <section style={{ padding: '80px 80px 60px' }}>
+      <section className="about-padding">
         <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '24px' }}>
           Portfolio
         </div>
-        <h1 style={{
+        <h1 className="text-h1" style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontSize: 'clamp(48px, 6vw, 80px)',
           fontWeight: 300, color: CREAM, lineHeight: 0.95, marginBottom: '40px',
         }}>
           Our <em style={{ color: GOLD }}>Work</em>
@@ -777,7 +875,7 @@ function WorkPage({ works }) {
         </div>
       </section>
 
-      <section style={{ padding: '20px 80px 120px' }}>
+      <section className="about-padding" style={{ paddingTop: '20px' }}>
         {filtered.length === 0 ? (
           <div style={{
             textAlign: 'center', padding: '100px 40px',
@@ -794,7 +892,7 @@ function WorkPage({ works }) {
             </p>
           </div>
         ) : (
-          <div style={{ columns: '3 340px', gap: '20px' }}>
+          <div className="grid-works" style={{ gap: '20px' }}>
             {filtered.map((w, i) => (
               <div key={i} style={{ breakInside: 'avoid', marginBottom: '20px' }}>
                 <WorkCard work={w} />
@@ -858,15 +956,15 @@ function ContactPage({ config }) {
 
   return (
     <div style={{ paddingTop: '100px', minHeight: '100vh', background: BLACK }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 'calc(100vh - 100px)' }}>
+      <div className="grid-2 contact-grid" style={{ minHeight: 'calc(100vh - 100px)' }}>
         {/* Left — info */}
-        <div style={{ padding: '80px', background: DARK, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="contact-padding" style={{ background: DARK, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '24px' }}>
             Let's Talk
           </div>
-          <h1 style={{
+          <h1 className="text-h1" style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: '60px', fontWeight: 300, color: CREAM, lineHeight: 0.95,
+            fontWeight: 300, color: CREAM, lineHeight: 0.95,
             marginBottom: '32px',
             whiteSpace: 'pre-line'
           }}>
@@ -928,7 +1026,7 @@ function ContactPage({ config }) {
         </div>
 
         {/* Right — form */}
-        <div style={{ padding: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="contact-padding" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {submitted ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{
@@ -1562,12 +1660,11 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 /* ── FOOTER ── */
 function Footer({ setPage, config }) {
   return (
-    <footer style={{
+    <footer className="section-padding" style={{
       background: CHARCOAL,
       borderTop: `1px solid rgba(201,168,76,0.12)`,
-      padding: '64px 80px 40px',
     }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '48px', marginBottom: '52px' }}>
+      <div className="grid-3 footer-grid" style={{ gap: '48px', marginBottom: '52px' }}>
         <div>
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -1675,8 +1772,7 @@ function HomePage({ setPage, works, config }) {
       <WorkSection works={works.slice(0, 6)} />
 
       {/* CTA */}
-      <section style={{
-        padding: '120px 80px',
+      <section className="section-padding" style={{
         background: DARK,
         textAlign: 'center',
         position: 'relative', overflow: 'hidden',
@@ -1699,9 +1795,8 @@ function HomePage({ setPage, works, config }) {
           <div style={{ fontSize: '11px', letterSpacing: '0.25em', color: GOLD, textTransform: 'uppercase', marginBottom: '24px' }}>
             Let's Build Something
           </div>
-          <h2 style={{
+          <h2 className="text-h1" style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 'clamp(48px, 6vw, 80px)',
             fontWeight: 300, color: CREAM, lineHeight: 0.95, marginBottom: '28px',
             whiteSpace: 'pre-line'
           }}>
@@ -1710,7 +1805,7 @@ function HomePage({ setPage, works, config }) {
           <p style={{ fontSize: '16px', color: 'rgba(232,228,220,0.6)', marginBottom: '48px', whiteSpace: 'pre-line' }}>
             {config.ctaSub}
           </p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <div className="flex-row" style={{ gap: '16px', justifyContent: 'center' }}>
             <button
               onClick={() => setPage('contact')}
               style={{
@@ -1758,6 +1853,10 @@ export default function App() {
         const { data: configData } = await supabase.from('config').select('data').eq('id', 1).single();
         if (configData?.data) {
           setConfig({ ...DEFAULT_CONFIG, ...configData.data });
+          if (configData.data.logoUrl) {
+            const favicon = document.getElementById('favicon');
+            if (favicon) favicon.href = configData.data.logoUrl;
+          }
         }
         const { data: worksData } = await supabase.from('works').select('*').order('created_at', { ascending: false });
         if (worksData) {
@@ -1779,6 +1878,10 @@ export default function App() {
 
   const saveConfig = async (newConfig) => {
     setConfig(newConfig);
+    if (newConfig.logoUrl) {
+      const favicon = document.getElementById('favicon');
+      if (favicon) favicon.href = newConfig.logoUrl;
+    }
     const { error } = await supabase.from('config').upsert({ id: 1, data: newConfig });
     return { error };
   };
