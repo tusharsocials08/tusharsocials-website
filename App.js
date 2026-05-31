@@ -1155,7 +1155,6 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
   const [authed, setAuthed] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('works');
   const [editConfig, setEditConfig] = useState(config || DEFAULT_CONFIG);
@@ -1198,46 +1197,6 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setMsg('Please enter your email address first.');
-      return;
-    }
-    if (config?.email && email.toLowerCase() !== config.email.toLowerCase()) {
-      setMsg('Only the admin can request a password reset.');
-      return;
-    }
-    setLoading(true);
-    setMsg('');
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
-    });
-    if (error) {
-      setMsg(error.message);
-    } else {
-      setMsg('Password reset link sent! Check your email.');
-    }
-    setLoading(false);
-  };
-
-  const handleUpdatePassword = async () => {
-    if (!newPassword) {
-      setMsg('Please enter a new password.');
-      return;
-    }
-    setLoading(true);
-    setMsg('');
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      setMsg(error.message);
-    } else {
-      setMsg('Password updated successfully!');
-      setNewPassword('');
-      setTimeout(() => setMsg(''), 3000);
-    }
-    setLoading(false);
   };
 
   const handleFileUpload = async (e) => {
@@ -1433,21 +1392,8 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
               letterSpacing: '0.15em', textTransform: 'uppercase',
               fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
               cursor: loading ? 'not-allowed' : 'pointer', borderRadius: '2px',
-              marginBottom: '16px'
             }}
           >{loading ? 'Signing in...' : 'Sign In'}</button>
-          
-          <button
-            onClick={handleForgotPassword}
-            disabled={loading}
-            style={{
-              background: 'transparent', color: 'rgba(232,228,220,0.6)', border: 'none',
-              padding: '8px', fontSize: '12px',
-              fontFamily: "'DM Sans', sans-serif",
-              cursor: loading ? 'not-allowed' : 'pointer',
-              textDecoration: 'underline'
-            }}
-          >Forgot Password?</button>
         </div>
       </div>
     );
@@ -1467,7 +1413,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
             </h1>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {['works', 'general', 'texts', 'lists', 'security'].map(t => (
+            {['works', 'general', 'texts', 'lists'].map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
@@ -1479,7 +1425,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
                   fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase',
                   fontFamily: "'DM Sans', sans-serif", cursor: 'pointer',
                 }}
-              >{t === 'works' ? 'Portfolio' : t === 'general' ? 'General' : t === 'texts' ? 'Extra Texts' : t === 'lists' ? 'Advanced Lists' : 'Security'}</button>
+              >{t === 'works' ? 'Portfolio' : t === 'general' ? 'General' : t === 'texts' ? 'Extra Texts' : 'Advanced Lists'}</button>
             ))}
             <button
               onClick={handleLogout}
@@ -1824,38 +1770,6 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'security' && (
-        <div className="admin-panel-container" style={{ padding: '60px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 160px)', width: '100%' }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '32px', color: CREAM, marginBottom: '40px' }}>Security Settings</h2>
-          
-          <div style={{ background: CHARCOAL, padding: '32px', borderRadius: '4px', border: `1px solid rgba(201,168,76,0.15)` }}>
-            <h3 style={{ color: GOLD, fontSize: '16px', marginBottom: '16px' }}>Change Password</h3>
-            <input
-              type="password"
-              style={inputStyle}
-              placeholder="New Password"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-            />
-            <button
-              onClick={handleUpdatePassword}
-              disabled={loading}
-              style={{
-                background: loading ? 'rgba(201,168,76,0.5)' : GOLD, color: BLACK, border: 'none',
-                padding: '12px 24px', fontSize: '12px',
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer', borderRadius: '2px',
-                marginTop: '16px'
-              }}
-            >
-              {loading ? 'Updating...' : 'Update Password'}
-            </button>
-            {msg && <p style={{ color: GOLD, fontSize: '13px', marginTop: '16px' }}>{msg}</p>}
           </div>
         </div>
       )}
