@@ -1303,7 +1303,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
     setMsg('Image uploaded! Click Save Settings to apply.');
   };
 
-  const addWork = async () => {
+  const saveWork = async () => {
     if (!newWork.title) { setMsg('Title is required'); return; }
 
     // Text length limits to prevent DB errors
@@ -1312,11 +1312,18 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
       return;
     }
 
-    setMsg('Adding work...');
+    setMsg(newWork.id ? 'Updating work...' : 'Adding work...');
     const { id, shootType, instaId, thumbnailUrl, ...workData } = newWork;
-    const insertData = { ...workData, shoottype: shootType, instaid: instaId, thumbnailurl: thumbnailUrl };
+    const dbData = { ...workData, shoottype: shootType, instaid: instaId, thumbnailurl: thumbnailUrl };
 
-    const { data, error } = await supabase.from('works').insert([insertData]).select();
+    let result;
+    if (id) {
+      result = await supabase.from('works').update(dbData).eq('id', id).select();
+    } else {
+      result = await supabase.from('works').insert([dbData]).select();
+    }
+
+    const { data, error } = result;
 
     if (error) {
       setMsg(`Error: ${error.message}`);
@@ -1324,9 +1331,16 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
     }
 
     const savedWork = { ...data[0], shootType: data[0].shoottype, instaId: data[0].instaid, thumbnailUrl: data[0].thumbnailurl };
-    setWorks([savedWork, ...works]);
+    
+    if (id) {
+      setWorks(works.map(w => w.id === id ? savedWork : w));
+      setMsg('✓ Work updated successfully!');
+    } else {
+      setWorks([savedWork, ...works]);
+      setMsg('✓ Work added successfully!');
+    }
+    
     setNewWork({ title: '', client: '', category: 'Social Media', type: 'image', url: '', description: '', shootType: '', location: '', instaId: '', thumbnailUrl: '' });
-    setMsg('✓ Work added successfully!');
     setTimeout(() => setMsg(''), 3000);
   };
 
@@ -1537,10 +1551,22 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
         <div className="admin-grid" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', minHeight: 'calc(100vh - 160px)' }}>
           {/* Add form */}
           <div className="admin-panel-container" style={{ padding: '40px', background: DARK, borderRight: `1px solid rgba(201,168,76,0.1)` }}>
-            <h2 style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: '24px', color: CREAM, fontWeight: 300, marginBottom: '28px',
-            }}>Add New Work</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <h2 style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: '24px', color: CREAM, fontWeight: 300, margin: 0,
+              }}>{newWork.id ? 'Edit Work' : 'Add New Work'}</h2>
+              {newWork.id && (
+                <button
+                  onClick={() => setNewWork({ title: '', client: '', category: 'Social Media', type: 'image', url: '', description: '', shootType: '', location: '', instaId: '', thumbnailUrl: '' })}
+                  style={{
+                    background: 'transparent', border: '1px solid rgba(232,228,220,0.3)',
+                    color: 'rgba(232,228,220,0.7)', padding: '6px 12px', borderRadius: '2px',
+                    fontSize: '11px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >Cancel Edit</button>
+              )}
+            </div>
 
             <input
               style={inputStyle}
@@ -1689,7 +1715,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
             )}
 
             <button
-              onClick={addWork}
+              onClick={saveWork}
               style={{
                 background: GOLD, color: BLACK, border: 'none',
                 padding: '16px', width: '100%', fontSize: '12px',
@@ -1701,7 +1727,7 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
               onMouseEnter={e => e.target.style.background = GOLD_LIGHT}
               onMouseLeave={e => e.target.style.background = GOLD}
             >
-              Add to Portfolio →
+              {newWork.id ? 'Update Portfolio →' : 'Add to Portfolio →'}
             </button>
           </div>
 
@@ -1756,15 +1782,39 @@ function AdminPanel({ works, setWorks, config, setConfig }) {
                         <div style={{ fontSize: '15px', color: CREAM, fontFamily: "'Cormorant Garamond', serif" }}>{w.title}</div>
                         {w.client && <div style={{ fontSize: '11px', color: GOLD, marginTop: '2px' }}>{w.client}</div>}
                       </div>
-                      <button
-                        onClick={() => removeWork(w.id)}
-                        style={{
-                          background: 'rgba(226,75,74,0.15)', border: `1px solid rgba(226,75,74,0.3)`,
-                          color: '#f09595', padding: '6px 12px', borderRadius: '2px',
-                          fontSize: '11px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-                          flexShrink: 0, marginLeft: '8px',
-                        }}
-                      >Remove</button>
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0, marginLeft: '8px' }}>
+                        <button
+                          onClick={() => {
+                            setNewWork({
+                              id: w.id,
+                              title: w.title || '',
+                              client: w.client || '',
+                              category: w.category || 'Social Media',
+                              type: w.type || 'image',
+                              url: w.url || '',
+                              description: w.description || '',
+                              shootType: w.shootType || '',
+                              location: w.location || '',
+                              instaId: w.instaId || '',
+                              thumbnailUrl: w.thumbnailUrl || ''
+                            });
+                            document.querySelector('.admin-grid').scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          style={{
+                            background: 'rgba(201,168,76,0.15)', border: `1px solid rgba(201,168,76,0.3)`,
+                            color: GOLD, padding: '6px 12px', borderRadius: '2px',
+                            fontSize: '11px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                          }}
+                        >Edit</button>
+                        <button
+                          onClick={() => removeWork(w.id)}
+                          style={{
+                            background: 'rgba(226,75,74,0.15)', border: `1px solid rgba(226,75,74,0.3)`,
+                            color: '#f09595', padding: '6px 12px', borderRadius: '2px',
+                            fontSize: '11px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                          }}
+                        >Remove</button>
+                      </div>
                     </div>
                   </div>
                 ))}
